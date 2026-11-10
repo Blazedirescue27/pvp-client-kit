@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pvp-client-kit — Minecraft PvP Client for Windows</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg-0:#070a17;
+    --bg-1:#0d1330;
+    --bg-2:#131a3d;
+    --ink:#e8ecff;
+    --muted:#98a2c8;
+    --line:rgba(140,160,255,.16);
+    --accent:#7c5cff;
+    --accent-2:#22d3ee;
+    --accent-3:#f472b6;
+    --glass:rgba(18,24,52,.55);
+    --radius:16px;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 600px at 12% -10%, rgba(124,92,255,.28), transparent 60%),
+      radial-gradient(900px 520px at 88% 4%, rgba(34,211,238,.16), transparent 60%),
+      radial-gradient(800px 700px at 50% 110%, rgba(244,114,182,.12), transparent 60%),
+      linear-gradient(165deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 78%, #090d20 100%);
+      background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:min(1120px,92vw);margin-inline:auto}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.02em}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:60;
+    backdrop-filter:blur(18px) saturate(160%);
+    -webkit-backdrop-filter:blur(18px) saturate(160%);
+    background:var(--glass);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;height:70px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
+  .brand-mark{
+    width:32px;height:32px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;font-size:.85rem;font-weight:900;color:#07101f;
+    box-shadow:0 0 22px rgba(124,92,255,.55);
+  }
+  .brand span{background:linear-gradient(90deg,#fff,#b9c2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{display:flex;align-items:center;gap:28px;font-size:.92rem;color:var(--muted);font-weight:500}
+  .nav-links a{transition:color .2s}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 20px;border-radius:999px;font-weight:700;font-size:.9rem;
+    background:linear-gradient(135deg,var(--accent),#5b8bff);
+    color:#fff;box-shadow:0 8px 26px -8px rgba(124,92,255,.9);
+    transition:transform .2s, box-shadow .2s;
+  }
+  .nav-cta:hover{transform:translateY(-2px);box-shadow:0 14px 32px -8px rgba(124,92,255,1)}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:88px 0 64px;text-align:center;position:relative}
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:7px 16px;border-radius:999px;font-size:.8rem;font-weight:600;
+    color:#c9d3ff;background:rgba(124,92,255,.12);
+    border:1px solid rgba(124,92,255,.35);
+    letter-spacing:.02em;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:#34e39c;box-shadow:0 0 10px #34e39c;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .hero h1{
+    font-size:clamp(2.3rem,6vw,4.15rem);font-weight:900;margin:24px auto 18px;max-width:16ch;
+    background:linear-gradient(100deg,#ffffff 8%,#b9a8ff 42%,#5ce1ff 72%,#ff9ad5 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 30px rgba(124,92,255,.28));
+  }
+  .hero p.lead{color:var(--muted);font-size:clamp(1rem,2.2vw,1.13rem);max-width:60ch;margin:0 auto 34px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-bottom:52px}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:15px 30px;border-radius:13px;font-weight:700;font-size:1rem;
+    transition:transform .2s, box-shadow .2s, background .2s, border-color .2s;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent) 0%,#4f7cff 55%,var(--accent-2) 130%);
+    color:#fff;box-shadow:0 14px 40px -12px rgba(124,92,255,.95);
+  }
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 22px 52px -14px rgba(124,92,255,1)}
+  .btn-ghost{
+    background:rgba(255,255,255,.045);color:#dbe1ff;
+    border:1px solid var(--line);backdrop-filter:blur(8px);
+  }
+  .btn-ghost:hover{transform:translateY(-3px);background:rgba(255,255,255,.09);border-color:rgba(160,180,255,.4)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .stat{
+    background:rgba(255,255,255,.035);
+    border:1px solid var(--line);border-radius:14px;
+    padding:18px 12px;text-align:center;
+    backdrop-filter:blur(10px);
+  }
+  .stat b{display:block;font-size:1.28rem;font-weight:800;letter-spacing:-.02em;
+    background:linear-gradient(90deg,#fff,#a9b8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat small{color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.11em;font-weight:600}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:76px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 48px}
+  .sec-tag{
+    font-size:.76rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+    color:#8f9dff;margin-bottom:12px;display:block;
+  }
+  .sec-head h2{font-size:clamp(1.6rem,3.6vw,2.35rem);font-weight:850;margin-bottom:12px}
+  .sec-head p{color:var(--muted);font-size:.98rem}
+
+  /* ---------- FEATURES ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{
+    position:relative;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 24px 26px;
+    transition:transform .25s ease, border-color .25s, box-shadow .25s;
+    backdrop-filter:blur(10px);
+  }
+  .card::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent-3));
+    opacity:.9;
+  }
+  .card:hover{
+    transform:translateY(-7px);
+    border-color:rgba(140,160,255,.42);
+    box-shadow:0 24px 48px -20px rgba(90,110,255,.55);
+  }
+  .card .ico{
+    width:48px;height:48px;border-radius:13px;display:grid;place-items:center;
+    font-size:1.45rem;margin-bottom:16px;
+    background:rgba(124,92,255,.14);border:1px solid rgba(124,92,255,.3);
+  }
+  .card h3{font-size:1.06rem;font-weight:750;margin-bottom:8px}
+  .card p{color:var(--muted);font-size:.9rem}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{position:relative;max-width:720px;margin:0 auto;padding-left:8px}
+  .steps::before{
+    content:"";position:absolute;left:29px;top:14px;bottom:14px;width:3px;border-radius:3px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2) 55%,var(--accent-3));
+    opacity:.75;
+  }
+  .step{position:relative;display:flex;gap:24px;padding:0 0 40px 0}
+  .step:last-child{padding-bottom:0}
+  .step .num{
+    flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+    font-weight:900;font-size:1rem;color:#07101f;
+    background:linear-gradient(135deg,#fff,#b9a8ff);
+    box-shadow:0 0 0 6px rgba(10,14,34,.9),0 0 26px rgba(124,92,255,.6);
+    z-index:1;
+  }
+  .step .body{padding-top:6px}
+  .step h3{font-size:1.08rem;font-weight:750;margin-bottom:6px}
+  .step p{color:var(--muted);font-size:.92rem;max-width:52ch}
+
+  /* ---------- FAQ ---------- */
+  .faq{max-width:780px;margin:0 auto;display:grid;gap:14px}
+  details{
+    background:rgba(255,255,255,.035);
+    border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;transition:border-color .25s, background .25s;
+  }
+  details[open]{border-color:rgba(140,160,255,.4);background:rgba(255,255,255,.055)}
+  summary{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:19px 22px;cursor:pointer;font-weight:650;font-size:.98rem;
+    list-style:none;user-select:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary .plus{
+    flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    font-size:1.1rem;font-weight:700;color:#aab6ff;background:rgba(124,92,255,.16);
+    transition:transform .28s ease, color .28s, background .28s;
+  }
+  details[open] summary .plus{transform:rotate(45deg);color:#fff;background:rgba(124,92,255,.42)}
+  details .answer{padding:0 22px 20px;color:var(--muted);font-size:.9rem;max-width:65ch}
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner{
+    position:relative;overflow:hidden;text-align:center;
+    padding:64px 32px;border-radius:26px;
+    border:1px solid rgba(140,160,255,.28);
+    background:
+      radial-gradient(560px 300px at 50% 0%, rgba(124,92,255,.42), transparent 70%),
+      radial-gradient(420px 260px at 82% 100%, rgba(34,211,238,.24), transparent 70%),
+      linear-gradient(160deg,rgba(20,26,58,.95),rgba(10,14,34,.95));
+    box-shadow:0 40px 90px -40px rgba(90,110,255,.7);
+  }
+  .cta-banner h2{font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;margin-bottom:14px}
+  .cta-banner p{color:var(--muted);max-width:52ch;margin:0 auto 30px;font-size:1rem}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line);padding:34px 0 46px;margin-top:20px}
+  .foot-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
+  .foot-inner p{color:var(--muted);font-size:.85rem}
+  .foot-links{display:flex;gap:22px;font-size:.85rem;color:var(--muted)}
+  .foot-links a:hover{color:#fff}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .nav-links{display:none}
+    .nav-inner{height:62px}
+    .hero{padding:60px 0 44px}
+    .btn-row{margin-bottom:38px}
+    .btn{width:100%;justify-content:center}
+    .grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr 1fr;gap:10px}
+    section{padding:56px 0}
+    .steps::before{left:25px}
+    .step .num{width:38px;height:38px;font-size:.9rem}
+    .step{gap:18px}
+    .cta-banner{padding:46px 22px;border-radius:20px}
+    .foot-inner{flex-direction:column;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand">
+      <div class="brand-mark">PVP</div>
+      <span>pvp-client-kit</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="nav-cta" href="https://gitscore.cc">Download</a>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="wrap">
+    <span class="pill"><span class="dot"></span> Minecraft PvP Client · Windows Build</span>
+    <h1>Dominate Every PvP Duel in Minecraft</h1>
+    <p class="lead">
+      pvp-client-kit is a modular Minecraft PvP client featuring aimbot, ESP wallhack, reach,
+      velocity control and autoclicker modules — bundled with a one-click injector loader and
+      swappable config profiles for every server meta.
+    </p>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://gitscore.cc">⬇ Download for Windows</a>
+      <a class="btn btn-ghost" href="https://gitscore.cc">★ GitHub Repository</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>128K+</b><small>Downloads</small></div>
+      <div class="stat"><b>v3.4.1</b><small>Latest Version</small></div>
+      <div class="stat"><b>Win 10 / 11</b><small>Supported OS</small></div>
+      <div class="stat"><b>Free</b><small>Open Source</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">Modules</span>
+      <h2>Every Combat Advantage, One Client</h2>
+      <p>Toggle each module independently from the in-game overlay or bind it to your config profile.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">🎯</div>
+        <h3>Aimbot</h3>
+        <p>Silky target smoothing with adjustable FOV, rotation speed and hitbox priority for sword and crystal PvP.</p>
+      </div>
+      <div class="card">
+        <div class="ico">👁️</div>
+        <h3>ESP Wallhack</h3>
+        <p>See players through blocks with box, name and health rendering, plus distance readouts and team colors.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📏</div>
+        <h3>Reach</h3>
+        <p>Extend your attack range with a precise slider and per-weapon presets that stay under server thresholds.</p>
+      </div>
+      <div class="card">
+        <div class="ico">💨</div>
+        <h3>Velocity</h3>
+        <p>Reduce or fully cancel knockback on incoming hits so combos stay locked in during bridge fights.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🖱️</div>
+        <h3>Autoclicker</h3>
+        <p>Humanized CPS with randomized intervals, burst mode and left/right click binding for fast bridging.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧩</div>
+        <h3>Injector &amp; Profiles</h3>
+        <p>One-click loader injection with safe attach, plus unlimited config profiles you can export and share.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">Setup</span>
+      <h2>Up and Running in Three Steps</h2>
+      <p>No Java editing, no launcher patching — the injector handles the attach for you.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div class="body">
+          <h3>Download &amp; extract</h3>
+          <p>Grab the latest build from gitscore.cc, extract the archive and launch the pvp-client-kit loader as administrator on Windows 10 or 11.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div class="body">
+          <h3>Inject into Minecraft</h3>
+          <p>Start your Minecraft instance, select it from the loader's process list and hit Inject. The overlay menu appears in-game instantly.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div class="body">
+          <h3>Pick a config profile</h3>
+          <p>Load a preset for your server meta, tune aimbot, ESP, reach, velocity and autoclicker toggles, then save the profile for next time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">FAQ</span>
+      <h2>Questions Before You Download</h2>
+      <p>Quick answers about the client, the loader and compatibility.</p>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>Is pvp-client-kit free to download?<span class="plus">+</span></summary>
+        <div class="answer">Yes. pvp-client-kit is free and open source. Every module — aimbot, ESP wallhack, reach, velocity and autoclicker — is included in the same build with no paid tier or license key.</div>
+      </details>
+      <details>
+        <summary>Which Windows versions are supported?<span class="plus">+</span></summary>
+        <div class="answer">The loader is built for Windows 10 and Windows 11 (64-bit). It runs alongside standard Minecraft launchers and needs administrator rights only to attach the injector correctly.</div>
+      </details>
+      <details>
+        <summary>How does the injector loader work?<span class="plus">+</span></summary>
+        <div class="answer">Launch Minecraft first, then open the pvp-client-kit loader, select the running game process and press Inject. The overlay binds to a hotkey you choose during setup, so you can toggle modules without leaving the game.</div>
+      </details>
+      <details>
+        <summary>Can I share my config profiles?<span class="plus">+</span></summary>
+        <div class="answer">Absolutely. Profiles are plain files stored in the client's config folder. Export any profile from the overlay menu to share it with friends or import one tuned for a specific server's PvP meta.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA BANNER ================= -->
+<section>
+  <div class="wrap">
+    <div class="cta-banner">
+      <h2>Ready to Win Your Next Duel?</h2>
+      <p>Download pvp-client-kit and load your first config profile in under a minute on Windows 10 or 11.</p>
+      <a class="btn btn-primary" href="https://gitscore.cc">⬇ Download pvp-client-kit Free</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap foot-inner">
+    <p>© 2025 pvp-client-kit. All rights reserved.</p>
+    <div class="foot-links">
+      <a href="https://gitscore.cc">GitHub</a>
+      <a href="https://gitscore.cc">Download</a>
+      <a href="#faq">Support</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
